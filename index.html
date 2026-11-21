@@ -5,202 +5,206 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Electricity Bill Calculator</title>
 <style>
-* { box-sizing: border-box; }
 body {
-    font-family: Arial, sans-serif;
-    background: linear-gradient(135deg, #e0f2fe, #d1fae5);
-    margin: 0;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
+  font-family: Arial, sans-serif;
+  background: #eef2f7;
+  margin: 0;
+  padding: 30px;
 }
-.card {
-    background: white;
-    width: 100%;
-    max-width: 430px;
-    padding: 30px;
-    border-radius: 18px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+.container {
+  max-width: 430px;
+  margin: auto;
+  background: white;
+  padding: 25px;
+  border-radius: 14px;
+  box-shadow: 0 4px 18px #0001;
 }
-h1 { text-align: center; color: #166534; }
-h2 { text-align: center; color: #334155; }
-input {
-    width: 100%;
-    padding: 12px;
-    margin: 8px 0;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
+h1, h2 { text-align: center; color: #174a7e; }
+input, button {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  box-sizing: border-box;
+  border-radius: 7px;
 }
+input { border: 1px solid #ccc; }
 button {
-    width: 100%;
-    padding: 12px;
-    margin-top: 10px;
-    border: none;
-    border-radius: 8px;
-    background: #15803d;
-    color: white;
-    font-size: 16px;
-    cursor: pointer;
+  background: #1769aa;
+  color: white;
+  border: none;
+  cursor: pointer;
 }
-button:hover { background: #166534; }
-.secondary { background: #475569; }
-.hidden { display: none; }
-#receipt {
-    background: #f0fdf4;
-    margin-top: 15px;
-    padding: 15px;
-    border-radius: 8px;
-    white-space: pre-wrap;
+button:hover { background: #125487; }
+.secondary { background: #555; }
+#calculator, #userInfo { display: none; }
+#result {
+  margin-top: 15px;
+  padding: 15px;
+  background: #e8f5e9;
+  border-radius: 8px;
 }
-.note {
-    text-align: center;
-    color: #64748b;
-    font-size: 13px;
-}
+.small { text-align: center; font-size: 14px; }
 </style>
 </head>
 <body>
 
-<div class="card" id="loginPage">
-    <h1>⚡ Electricity Billing</h1>
-    <h2>Login</h2>
-    <input id="loginUser" placeholder="Username">
-    <input id="loginPass" type="password" placeholder="Password">
-    <button onclick="login()">Login</button>
-    <button class="secondary" onclick="showRegister()">Create Account</button>
-    <p class="note">Electricity Bill Calculator</p>
+<div class="container">
+<h1>Electricity Bill Calculator</h1>
+
+<div id="authSection">
+  <h2 id="authTitle">Login</h2>
+  <input type="email" id="email" placeholder="Email address">
+  <input type="password" id="password" placeholder="Password">
+
+  <button id="authButton">Login</button>
+  <button id="toggleButton" class="secondary">Create Account</button>
+  <p id="authMessage" class="small"></p>
 </div>
 
-<div class="card hidden" id="registerPage">
-    <h1>Create Account</h1>
-    <input id="regUser" placeholder="New Username">
-    <input id="regPass" type="password" placeholder="New Password">
-    <button onclick="register()">Register</button>
-    <button class="secondary" onclick="showLogin()">Back to Login</button>
+<div id="calculator">
+  <p id="userInfo" class="small"></p>
+  <h2>Calculate Bill</h2>
+
+  <input type="text" id="consumerName" placeholder="Consumer Name">
+  <input type="text" id="consumerId" placeholder="Consumer ID">
+  <input type="number" id="units" placeholder="Units Consumed">
+
+  <button id="calculateButton">Calculate Bill</button>
+  <button id="clearButton" class="secondary">Clear</button>
+  <button id="logoutButton" class="secondary">Logout</button>
+
+  <div id="result"></div>
+</div>
 </div>
 
-<div class="card hidden" id="calculatorPage">
-    <h1>⚡ Electricity Bill</h1>
-    <input id="consumerName" placeholder="Consumer Name">
-    <input id="consumerId" placeholder="Consumer ID">
-    <input id="units" type="number" placeholder="Units Consumed">
-    <button onclick="calculate()">Calculate Bill</button>
-    <button class="secondary" onclick="clearFields()">Clear</button>
-    <button class="secondary" onclick="logout()">Logout</button>
-    <div id="receipt" class="hidden"></div>
-</div>
+<script type="module">
+import { initializeApp } from
+"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
-<script>
-function getUsers() {
-    return JSON.parse(localStorage.getItem("users") || "{}");
-}
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
-function showLogin() {
-    loginPage.classList.remove("hidden");
-    registerPage.classList.add("hidden");
-    calculatorPage.classList.add("hidden");
-}
+// REPLACE THIS CONFIG WITH YOUR FIREBASE CONFIG
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyB8yKjDkUqGJCjQLryv-x0yKu4L7UugCeQ",
+  authDomain: "electricitybillcalculato-aa64e.firebaseapp.com",
+  projectId: "electricitybillcalculato-aa64e",
+  storageBucket: "electricitybillcalculato-aa64e.firebasestorage.app",
+  messagingSenderId: "1031628376769",
+  appId: "1:1031628376769:web:9bc5b2cde748c74585a240",
+  measurementId: "G-NVVPQ3BRWE"
+};
 
-function showRegister() {
-    loginPage.classList.add("hidden");
-    registerPage.classList.remove("hidden");
-    calculatorPage.classList.add("hidden");
-}
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
-function register() {
-    let user = regUser.value.trim();
-    let pass = regPass.value;
+let isRegistering = false;
 
-    if (!user || !pass) {
-        alert("Please enter both username and password.");
-        return;
-    }
+const authSection = document.getElementById("authSection");
+const calculator = document.getElementById("calculator");
+const authTitle = document.getElementById("authTitle");
+const authButton = document.getElementById("authButton");
+const toggleButton = document.getElementById("toggleButton");
+const authMessage = document.getElementById("authMessage");
 
-    let users = getUsers();
+toggleButton.addEventListener("click", () => {
+  isRegistering = !isRegistering;
+  authTitle.textContent = isRegistering ? "Create Account" : "Login";
+  authButton.textContent = isRegistering ? "Register" : "Login";
+  toggleButton.textContent = isRegistering ? "Back to Login" : "Create Account";
+  authMessage.textContent = "";
+});
 
-    if (users[user]) {
-        alert("Username already exists!");
-        return;
-    }
+authButton.addEventListener("click", async () => {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
 
-    users[user] = pass;
-    localStorage.setItem("users", JSON.stringify(users));
+  if (!email || !password) {
+    authMessage.textContent = "Enter email and password.";
+    return;
+  }
 
-    alert("Account created successfully!");
-    regUser.value = "";
-    regPass.value = "";
-    showLogin();
-}
-
-function login() {
-    let user = loginUser.value.trim();
-    let pass = loginPass.value;
-    let users = getUsers();
-
-    if (users[user] && users[user] === pass) {
-        alert("Login successful!");
-        loginPage.classList.add("hidden");
-        registerPage.classList.add("hidden");
-        calculatorPage.classList.remove("hidden");
+  try {
+    if (isRegistering) {
+      await createUserWithEmailAndPassword(auth, email, password);
+      authMessage.textContent = "Account created successfully!";
     } else {
-        alert("Invalid username or password!");
+      await signInWithEmailAndPassword(auth, email, password);
     }
+  } catch (error) {
+    authMessage.textContent = error.message;
+  }
+});
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    authSection.style.display = "none";
+    calculator.style.display = "block";
+    document.getElementById("userInfo").style.display = "block";
+    document.getElementById("userInfo").textContent =
+      "Logged in as: " + user.email;
+  } else {
+    authSection.style.display = "block";
+    calculator.style.display = "none";
+  }
+});
+
+document.getElementById("calculateButton").addEventListener("click", () => {
+  const name = document.getElementById("consumerName").value.trim();
+  const id = document.getElementById("consumerId").value.trim();
+  const units = Number(document.getElementById("units").value);
+  const result = document.getElementById("result");
+
+  if (!name || !id || document.getElementById("units").value === "" ||
+      !Number.isFinite(units) || units < 0) {
+    result.innerHTML = "Please enter valid consumer details and units.";
+    return;
+  }
+
+  let bill = 0;
+
+  if (units <= 100) {
+    bill = units * 3;
+  } else if (units <= 200) {
+    bill = (100 * 3) + ((units - 100) * 5);
+  } else {
+    bill = (100 * 3) + (100 * 5) + ((units - 200) * 7);
+  }
+
+  result.innerHTML =
+    "<h3>Electricity Bill</h3>" +
+    "<p>Consumer Name: " + escapeHTML(name) + "</p>" +
+    "<p>Consumer ID: " + escapeHTML(id) + "</p>" +
+    "<p>Units Consumed: " + units + "</p>" +
+    "<h3>Total Bill: ₹" + bill.toFixed(2) + "</h3>";
+});
+
+function escapeHTML(value) {
+  return value.replace(/[&<>"']/g, character => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[character]));
 }
 
-function calculate() {
-    let name = consumerName.value.trim();
-    let id = consumerId.value.trim();
-    let unitsValue = units.value;
-    let u = Number(unitsValue);
+document.getElementById("clearButton").addEventListener("click", () => {
+  document.getElementById("consumerName").value = "";
+  document.getElementById("consumerId").value = "";
+  document.getElementById("units").value = "";
+  document.getElementById("result").innerHTML = "";
+});
 
-    if (!name || !id || unitsValue === "") {
-        alert("Please fill in all fields.");
-        return;
-    }
-
-    if (!Number.isFinite(u) || u < 0) {
-        alert("Please enter valid units.");
-        return;
-    }
-
-    let bill;
-
-    if (u <= 100) {
-        bill = u * 3;
-    } else if (u <= 200) {
-        bill = (100 * 3) + ((u - 100) * 5);
-    } else {
-        bill = (100 * 3) + (100 * 5) + ((u - 200) * 7);
-    }
-
-    let receiptText =
-        "----- Electricity Bill -----\n" +
-        "Consumer Name: " + name + "\n" +
-        "Consumer ID: " + id + "\n" +
-        "Units Consumed: " + u + "\n" +
-        "Total Bill: Rs. " + bill.toFixed(2);
-
-    receipt.textContent = receiptText;
-    receipt.classList.remove("hidden");
-}
-
-function clearFields() {
-    consumerName.value = "";
-    consumerId.value = "";
-    units.value = "";
-    receipt.textContent = "";
-    receipt.classList.add("hidden");
-}
-
-function logout() {
-    clearFields();
-    loginUser.value = "";
-    loginPass.value = "";
-    showLogin();
-}
+document.getElementById("logoutButton").addEventListener("click", () => {
+  signOut(auth);
+});
 </script>
-
 </body>
 </html>
