@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Electricity Bill Calculator</title>
+<style>
+* { box-sizing: border-box; }
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #e0f2fe, #d1fae5);
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+.card {
+    background: white;
+    width: 100%;
+    max-width: 430px;
+    padding: 30px;
+    border-radius: 18px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
+h1 { text-align: center; color: #166534; }
+h2 { text-align: center; color: #334155; }
+input {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+}
+button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 8px;
+    background: #15803d;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+button:hover { background: #166534; }
+.secondary { background: #475569; }
+.hidden { display: none; }
+#receipt {
+    background: #f0fdf4;
+    margin-top: 15px;
+    padding: 15px;
+    border-radius: 8px;
+    white-space: pre-wrap;
+}
+.note {
+    text-align: center;
+    color: #64748b;
+    font-size: 13px;
+}
+</style>
+</head>
+<body>
+
+<div class="card" id="loginPage">
+    <h1>⚡ Electricity Billing</h1>
+    <h2>Login</h2>
+    <input id="loginUser" placeholder="Username">
+    <input id="loginPass" type="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+    <button class="secondary" onclick="showRegister()">Create Account</button>
+    <p class="note">Electricity Bill Calculator</p>
+</div>
+
+<div class="card hidden" id="registerPage">
+    <h1>Create Account</h1>
+    <input id="regUser" placeholder="New Username">
+    <input id="regPass" type="password" placeholder="New Password">
+    <button onclick="register()">Register</button>
+    <button class="secondary" onclick="showLogin()">Back to Login</button>
+</div>
+
+<div class="card hidden" id="calculatorPage">
+    <h1>⚡ Electricity Bill</h1>
+    <input id="consumerName" placeholder="Consumer Name">
+    <input id="consumerId" placeholder="Consumer ID">
+    <input id="units" type="number" placeholder="Units Consumed">
+    <button onclick="calculate()">Calculate Bill</button>
+    <button class="secondary" onclick="clearFields()">Clear</button>
+    <button class="secondary" onclick="logout()">Logout</button>
+    <div id="receipt" class="hidden"></div>
+</div>
+
+<script>
+function getUsers() {
+    return JSON.parse(localStorage.getItem("users") || "{}");
+}
+
+function showLogin() {
+    loginPage.classList.remove("hidden");
+    registerPage.classList.add("hidden");
+    calculatorPage.classList.add("hidden");
+}
+
+function showRegister() {
+    loginPage.classList.add("hidden");
+    registerPage.classList.remove("hidden");
+    calculatorPage.classList.add("hidden");
+}
+
+function register() {
+    let user = regUser.value.trim();
+    let pass = regPass.value;
+
+    if (!user || !pass) {
+        alert("Please enter both username and password.");
+        return;
+    }
+
+    let users = getUsers();
+
+    if (users[user]) {
+        alert("Username already exists!");
+        return;
+    }
+
+    users[user] = pass;
+    localStorage.setItem("users", JSON.stringify(users));
+
+    alert("Account created successfully!");
+    regUser.value = "";
+    regPass.value = "";
+    showLogin();
+}
+
+function login() {
+    let user = loginUser.value.trim();
+    let pass = loginPass.value;
+    let users = getUsers();
+
+    if (users[user] && users[user] === pass) {
+        alert("Login successful!");
+        loginPage.classList.add("hidden");
+        registerPage.classList.add("hidden");
+        calculatorPage.classList.remove("hidden");
+    } else {
+        alert("Invalid username or password!");
+    }
+}
+
+function calculate() {
+    let name = consumerName.value.trim();
+    let id = consumerId.value.trim();
+    let unitsValue = units.value;
+    let u = Number(unitsValue);
+
+    if (!name || !id || unitsValue === "") {
+        alert("Please fill in all fields.");
+        return;
+    }
+
+    if (!Number.isFinite(u) || u < 0) {
+        alert("Please enter valid units.");
+        return;
+    }
+
+    let bill;
+
+    if (u <= 100) {
+        bill = u * 3;
+    } else if (u <= 200) {
+        bill = (100 * 3) + ((u - 100) * 5);
+    } else {
+        bill = (100 * 3) + (100 * 5) + ((u - 200) * 7);
+    }
+
+    let receiptText =
+        "----- Electricity Bill -----\n" +
+        "Consumer Name: " + name + "\n" +
+        "Consumer ID: " + id + "\n" +
+        "Units Consumed: " + u + "\n" +
+        "Total Bill: Rs. " + bill.toFixed(2);
+
+    receipt.textContent = receiptText;
+    receipt.classList.remove("hidden");
+}
+
+function clearFields() {
+    consumerName.value = "";
+    consumerId.value = "";
+    units.value = "";
+    receipt.textContent = "";
+    receipt.classList.add("hidden");
+}
+
+function logout() {
+    clearFields();
+    loginUser.value = "";
+    loginPass.value = "";
+    showLogin();
+}
+</script>
+
+</body>
+</html>
